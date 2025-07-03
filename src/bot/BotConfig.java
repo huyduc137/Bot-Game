@@ -3,7 +3,7 @@ package bot;
 
 public class BotConfig {
     public static final String SERVER_URL = "https://cf25-server.jsclub.dev";
-    public static final String GAME_ID = "139972";
-    public static final String PLAYER_NAME = "huyduc";
-    public static final String SECRET_KEY = "sk-Xp9wLc8xSjKqNgi2US8eBw:chJ2G4941Lu6yzqpLy9ZtBleGked7woMeNRi0_xojkil1SovNYdFOKN-55eOPhbXTYeQNLlFrgXJJNDovuqeDQ";
+    public static final String GAME_ID = "136752";
+    public static final String PLAYER_NAME = "ThinhPham";
+    public static final String SECRET_KEY = "sk-wqB8BBFGQlGBIkvzfcf1NA:CEhvdHJG3M5mOs3hgSmxylIuu3hAhXbhY5QCoCGwxL85xJUG2vTPV9cKoAJiwQVq81XDCoJ31gRw-DXyp3Adug";
 }
