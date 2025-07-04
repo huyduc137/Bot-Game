@@ -21,6 +21,9 @@ public class EnemySelector {
 
     private static boolean isPathClear(Node nodeStart, Node nodeEnd) {
         String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(false, false), nodeStart, nodeEnd, false);
+        if (path == null) {
+            return false;
+        }
         for (int i = 1; i < path.length(); i++) {
             if (path.charAt(i) != path.charAt(i - 1)) {
                 return false; // Path is not clear if there are turns
@@ -35,7 +38,7 @@ public class EnemySelector {
         int maxRangeDamage = 0;
 
         Node player = BotContext.player;
-        int maxDistance = BotContext.inventory.getGun() != null ? BotContext.inventory.getGun().getRange() : 1;
+        int maxDistance = BotContext.inventory.getGun() != null ? BotContext.inventory.getGun().getRange()[1] : 1;
         int minDistance = 1; // Minimum distance for melee attack
 
         Weapon gun = BotContext.inventory.getGun();
@@ -62,21 +65,21 @@ public class EnemySelector {
                 return null; // If the enemy is adjacent, return null to avoid melee attack
             }
 
-            if (gun != null && gun.getRange() >= distance) {
+            if (gun != null && gun.getRange()[1] >= distance) {
                 // If the player has a gun and the enemy is within range
                 if (maxRangeDamage < gun.getDamage()) {
                     maxRangeDamage = gun.getDamage();
                     bestEnemy = enemy;
                 }
             } 
-            if (special != null && special.getRange() >= distance) {
+            if (special != null && special.getRange()[1] - 1 <= distance && distance <= special.getRange()[1] + 1) {
                 // If the player has a special weapon and the enemy is within range
                 if (maxRangeDamage < special.getDamage()) {
                     maxRangeDamage = special.getDamage();
                     bestEnemy = enemy;
                 }
             } 
-            if (throwable != null && throwable.getRange() >= distance) {
+            if (throwable != null && throwable.getRange()[1] >= distance) {
                 // If the player has a throwable weapon and the enemy is within range
                 if (maxRangeDamage < throwable.getDamage()) {
                     maxRangeDamage = throwable.getDamage();

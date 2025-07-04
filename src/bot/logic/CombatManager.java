@@ -1,6 +1,6 @@
 package bot.logic;
 
-import jsclub.codefest.sdk.model.healing_items.HealingItem;
+import jsclub.codefest.sdk.model.support_items.SupportItem;
 import jsclub.codefest.sdk.model.npcs.Ally;
 import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.players.Player;
@@ -38,19 +38,26 @@ public class CombatManager {
         return false;
     }
 
-    public boolean tryHealIfNeeded() throws  Exception {
+    public boolean tryHealIfNeeded() throws Exception {
         if (BotContext.player.getHealth() < HEALTH_THRESHOLD_TO_HEAL) {
-            //nếu máu dưới ngưỡng, ưu tiên dùng item hồi máu
-            HealingItem bestHeal = findBestHealingItem();
-            if (bestHeal != null) {
-                System.out.println("Low health. Using healing item: " + bestHeal.getId());
-                hero.botUseItem(bestHeal.getId());
+            // nếu máu dưới ngưỡng, ưu tiên dùng item hỗ trợ hồi máu
+            SupportItem bestSupport = findBestSupportItem();
+            if (bestSupport != null) {
+                System.out.println("Low health. Using support item: " + bestSupport.getId());
+                hero.botUseItem(bestSupport.getId());
                 return true;
             }
+
             Ally spiritAlly = findNearestAlly(ALLY_NPC_ID);
             if (spiritAlly != null) {
                 System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
-                String pathToAlly = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(true, false), BotContext.player, spiritAlly, false);
+                String pathToAlly = PathUtils.getShortestPath(
+                        BotContext.gameMap,
+                        PathPlanner.getNodesToAvoid(true, false),
+                        BotContext.player,
+                        spiritAlly,
+                        false
+                );
                 if (pathToAlly != null && !pathToAlly.isEmpty()) {
                     hero.move(pathToAlly);
                     return true;
@@ -78,10 +85,11 @@ public class CombatManager {
         for (int i = 0; i < 3; i++) {
             Weapon weapon = rangedWeapons[i];
             check |= types[i].equals(previousAction);
-            if (weapon == null || check) {
+            if (weapon == null || types[i].equals(previousAction)) {
                 continue; // Skip if no weapon available
             }
-            if (weapon.getRange() >= distance) {
+            if ((types[i] != "throwItem" && weapon.getRange()[1] >= distance) || 
+                (types[i] == "throwItem" && weapon.getRange()[1] - 1 <= distance && distance <= weapon.getRange()[1] + 1)) {
                 if (bestWeapon == null || weapon.getDamage() >= bestWeapon.getDamage()) {
                     bestWeapon = weapon; // Select the weapon with the highest damage within range
                 }
@@ -103,7 +111,7 @@ public class CombatManager {
                 return true;
 
             case THROWABLE:
-                hero.botThrowItem(path, distance);
+                hero.botThrowItem(path);
                 return true;
         }
         if (check) {
@@ -126,6 +134,7 @@ public class CombatManager {
         if (distance == 1) {
             if (previousAction == "attack") {
                 hero.botShoot(path);
+                return true;
             }
             // If the enemy is adjacent, perform a melee attack
             hero.botAttack(path);
@@ -137,9 +146,9 @@ public class CombatManager {
         }
     }
 
-    private HealingItem findBestHealingItem() {
-        return hero.getInventory().getListHealingItem().stream()
-                .max(Comparator.comparingInt(HealingItem::getHealingHP))
+    private SupportItem findBestSupportItem() {
+        return hero.getInventory().getListSupportItem().stream()
+                .max(Comparator.comparingInt(SupportItem::getHealingHP))
                 .orElse(null);
     }
 

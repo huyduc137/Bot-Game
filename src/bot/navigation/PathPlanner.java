@@ -18,7 +18,7 @@ public class PathPlanner {
 
         // Thêm các vật cản không thể đi qua
         for (Obstacle obstacle : BotContext.gameMap.getListObstacles()) {
-            List<ObstacleTag> tags = obstacle.getTag();
+            List<ObstacleTag> tags = obstacle.getTags();
             // Sửa lại điều kiện một chút để bao gồm cả những vật cản không có tag
             // Chỉ những vật cản có tag CAN_GO_THROUGH mới được đi qua.
             if (tags == null || !tags.contains(ObstacleTag.CAN_GO_THROUGH)) {

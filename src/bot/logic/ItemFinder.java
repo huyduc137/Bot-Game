@@ -4,7 +4,7 @@ import bot.navigation.PathPlanner;
 import jsclub.codefest.sdk.algorithm.PathUtils;
 import jsclub.codefest.sdk.model.obstacles.Obstacle;
 import jsclub.codefest.sdk.model.armors.Armor;
-import jsclub.codefest.sdk.model.healing_items.HealingItem;
+import jsclub.codefest.sdk.model.support_items.SupportItem;
 import jsclub.codefest.sdk.model.weapon.Weapon;
 import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.players.Player;
@@ -43,7 +43,7 @@ public class ItemFinder {
     private String pathToHelmet;
     private Armor nearestHelmet;
     private String pathToHealthItem;
-    private HealingItem nearestHealthItem;
+    private SupportItem nearestSupportItem;
     private int actionCount = -1;
 
     public String pathToItem;
@@ -153,7 +153,10 @@ public class ItemFinder {
     }
 
     private Obstacle getNearestChest() {
-        List<Obstacle> chests = BotContext.gameMap.getListChests();
+        List<Obstacle> chests = BotContext.gameMap.getListObstacles().stream()
+                .filter(obstacle -> ElementType.CHEST.equals(obstacle.getType()))
+                .collect(Collectors.toList());
+
         Obstacle nearestChest = null;
         double minDistance = Double.MAX_VALUE;
         for (Obstacle chest : chests) {
@@ -213,27 +216,33 @@ public class ItemFinder {
         return this.nearestHelmet = nearestHelmet;
     }
 
-    private HealingItem getNearestHealthItem() {
-        List<HealingItem> currentHealingItems = BotContext.inventory.getListHealingItem();
-        if (currentHealingItems != null && currentHealingItems.size() == 4) {
+    private SupportItem getNearestSupportItem() {
+        List<SupportItem> currentSupportItems = BotContext.inventory.getListSupportItem();
+        if (currentSupportItems != null && currentSupportItems.size() == 4) {
             return null;
         }
-        List<HealingItem> healthItems = BotContext.gameMap.getListHealingItems();
-        HealingItem nearestHealthItem = null;
+
+        List<SupportItem> supportItems = BotContext.gameMap.getListSupportItems();
+        SupportItem nearestSupportItem = null;
         double minDistance = Double.MAX_VALUE;
-        for (HealingItem healthItem : healthItems) {
-            if (!isItemInSafeZone(healthItem) || healthItem.getId().equals("COMPASS")) {
-                continue; // Skip compass, as it is not a healing item
+
+        for (SupportItem supportItem : supportItems) {
+            if (!isItemInSafeZone(supportItem) || supportItem.getId().equals("COMPASS")) {
+                continue; // Skip compass, as it is not a healing support item
             }
-            String path = findPathToItem(healthItem);
+
+            String path = findPathToItem(supportItem);
             int distance = (path == null ? Integer.MAX_VALUE : path.length());
+
             if (distance < minDistance) {
                 minDistance = distance;
-                nearestHealthItem = healthItem;
+                nearestSupportItem = supportItem;
             }
         }
-        return this.nearestHealthItem = nearestHealthItem;
+
+        return this.nearestSupportItem = nearestSupportItem;
     }
+
 
     public void findPathToItem() throws IOException {
         if (actionCount == BotMemory.actionCount) {
@@ -249,7 +258,8 @@ public class ItemFinder {
         pathToChest = findPathToItem(getNearestChest());
         pathToArmor = findPathToItem(getNearestArmor());
         pathToHelmet = findPathToItem(getNearestHelmet());
-        pathToHealthItem = findPathToItem(getNearestHealthItem());
+        pathToHealthItem = findPathToItem(getNearestSupportItem());
+
 
         String[] pathsArray = {
             pathToGun, pathToMelee, pathToThrowable, pathToSpecial,

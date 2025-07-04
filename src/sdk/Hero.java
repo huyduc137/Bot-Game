@@ -1,7 +1,7 @@
 package sdk;
 
 import jsclub.codefest.sdk.model.Inventory;
-import jsclub.codefest.sdk.factory.HealingItemFactory;
+import jsclub.codefest.sdk.factory.SupportItemFactory;
 
 import java.io.IOException;
 
@@ -45,12 +45,12 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         BotMemory.lastAction.add("shoot");
     }
 
-    public void botThrowItem(String direction, int distance) throws IOException {
+    public void botThrowItem(String direction) throws IOException {
         if (direction == null || direction.isEmpty()) {
             return; // Avoid throwing item if direction is not specified
         }
         System.out.println("Action: Throwing Item");
-        super.throwItem(direction.substring(0, 1), distance);
+        super.throwItem(direction.substring(0, 1));
         BotMemory.lastAction.add("throwItem");
     }
 
@@ -72,18 +72,21 @@ public class Hero extends jsclub.codefest.sdk.Hero {
     }
 
     public void botUseItem(String itemId) throws IOException {
-        // 
-
         if (itemId == null || itemId.isEmpty()) {
             return; // Avoid using item if itemId is not specified
         }
-        if (!BotContext.inventory.getListHealingItem().contains(HealingItemFactory.getHealingItemById(itemId))) {
+
+        // Kiểm tra xem item có trong inventory không
+        if (!BotContext.inventory.getListSupportItem()
+                .contains(SupportItemFactory.getSupportItemById(itemId))) {
             return; // Avoid using item if it is not in the inventory
         }
+
         System.out.println("Action: Using item with ID " + itemId);
         super.useItem(itemId);
         BotMemory.lastAction.add("useItem");
     }
+
 
     public void botRevokeItem(String itemId) throws IOException {
         // 
