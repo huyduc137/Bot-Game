@@ -8,6 +8,7 @@ import jsclub.codefest.sdk.model.weapon.Weapon;
 import jsclub.codefest.sdk.algorithm.PathUtils;
 
 import java.util.Comparator;
+import java.util.List;
 
 import sdk.Hero;
 import bot.BotContext;
@@ -147,6 +148,9 @@ public class CombatManager {
     }
 
     private SupportItem findBestSupportItem() {
+        List<SupportItem> items = hero.getInventory().getListSupportItem();
+        if (items == null || items.isEmpty()) return null;
+
         return hero.getInventory().getListSupportItem().stream()
                 .max(Comparator.comparingInt(SupportItem::getHealingHP))
                 .orElse(null);
