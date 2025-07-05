@@ -33,10 +33,10 @@ public class BotController {
 
             // kiểm tra có lặp không
 
-            // if ("move".equals(BotMemory.handledRepeatingSameAction())) {
-            //     hero.botIdle();
-            //     return;
-            // }
+             if ("move".equals(BotMemory.handledRepeatingSameAction())) {
+                 hero.botIdle();
+                 return;
+             }
 
             // ƯU TIÊN 1: luôn trong bo và xử lý hồi máu
             if (safeZoneNavigator.isInSafeZone() || combatManager.tryHealIfNeeded()) {
@@ -46,8 +46,8 @@ public class BotController {
             }
 
             // ƯU TIÊN 2: nhặt đồ, ưu tiên súng;
-            if (BotContext.inventory.getGun() == null) {
-                itemFinder.action();
+            if (BotContext.inventory.getGun() == null && itemFinder.action()) {
+                return ;
             }
 
             itemFinder.findPathToItem();

@@ -9,9 +9,10 @@ import jsclub.codefest.sdk.model.weapon.Weapon;
 import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.players.Player;
 import jsclub.codefest.sdk.model.ElementType;
-import jsclub.codefest.sdk.base.Node;
+import jsclub.codefest.sdk.model.Element;
 import jsclub.codefest.sdk.factory.WeaponFactory;
 import jsclub.codefest.sdk.factory.ArmorFactory;
+import jsclub.codefest.sdk.base.Node;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.util.Objects;
@@ -21,6 +22,7 @@ import sdk.Hero;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
+import java.util.Comparator;
 
 import bot.BotContext;
 import bot.navigation.PathPlanner;
@@ -45,6 +47,7 @@ public class ItemFinder {
     private String pathToHealthItem;
     private SupportItem nearestSupportItem;
     private int actionCount = -1;
+    private ElementType nearestItem;
 
     public String pathToItem;
 
@@ -53,10 +56,7 @@ public class ItemFinder {
     }
 
     private boolean isItemInSafeZone(Node itemNode) {
-        int mapSize = BotContext.gameMap.getMapSize();
-        int safeZoneSize = BotContext.gameMap.getSafeZone();
-        return Math.abs(itemNode.getX() - mapSize / 2) <= safeZoneSize &&
-               Math.abs(itemNode.getY() - mapSize / 2) <= safeZoneSize;
+        return PathUtils.checkInsideSafeArea(itemNode, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize());
     }
 
     private String findPathToItem(Node itemNode) {
@@ -68,9 +68,9 @@ public class ItemFinder {
 
 
     private Weapon getNearestGun() {
-        if (BotContext.inventory.getGun() != null) {
-            return null; // If the player already has a gun, no need to find one
-        }
+        // if (BotContext.inventory.getGun() != null) {
+        //     return null; // If the player already has a gun, no need to find one
+        // }
         List<Weapon> Guns = BotContext.gameMap.getAllGun();
         Weapon nearestGun = null;
         int minDistance = Integer.MAX_VALUE;
@@ -89,9 +89,9 @@ public class ItemFinder {
     }
 
     private Weapon getNearestMelee() {
-        if (BotContext.inventory.getMelee() != WeaponFactory.getWeaponById("HAND")) {
-            return null; // If the player already has a melee weapon, no need to find one
-        }
+        // if (BotContext.inventory.getMelee() != WeaponFactory.getWeaponById("HAND")) {
+        //     return null; // If the player already has a melee weapon, no need to find one
+        // }
         List<Weapon> MeleeWeapons = BotContext.gameMap.getAllMelee();
         Weapon nearestMelee = null;
         double minDistance = Double.MAX_VALUE;
@@ -111,9 +111,9 @@ public class ItemFinder {
     }
 
     private Weapon getNearestThrowable() {
-        if (BotContext.inventory.getThrowable() != null) {
-            return null; // If the player already has a throwable weapon, no need to find one
-        }
+        // if (BotContext.inventory.getThrowable() != null) {
+        //     return null; // If the player already has a throwable weapon, no need to find one
+        // }
         List<Weapon> Throwables = BotContext.gameMap.getAllThrowable();
         Weapon nearestThrowable = null;
         double minDistance = Double.MAX_VALUE;
@@ -132,9 +132,9 @@ public class ItemFinder {
     }
 
     private Weapon getNearestSpecial() {
-        if (BotContext.inventory.getSpecial() != null) {
-            return null; // If the player already has a special weapon, no need to find one
-        }
+        // if (BotContext.inventory.getSpecial() != null) {
+        //     return null; // If the player already has a special weapon, no need to find one
+        // }
         List<Weapon> SpecialWeapons = BotContext.gameMap.getAllSpecial();
         Weapon nearestSpecial = null;
         double minDistance = Double.MAX_VALUE;
@@ -174,10 +174,10 @@ public class ItemFinder {
     }
 
     private Armor getNearestArmor() {
-        List<Armor> armors = BotContext.gameMap.getListArmors();
-        if (BotContext.inventory.getArmor() != null) {
-            return null;
-        }
+         List<Armor> armors = BotContext.gameMap.getListArmors();
+        // if (BotContext.inventory.getArmor() != null) {
+        //     return null;
+        // }
         Armor nearestArmor = null;
         double minDistance = Double.MAX_VALUE;
         for (Armor armor : armors) {
@@ -195,10 +195,10 @@ public class ItemFinder {
     }
 
     private Armor getNearestHelmet() {
-        List<Armor> helmets = BotContext.gameMap.getListArmors();
-        if (BotContext.inventory.getHelmet() != null) {
-            return null;
-        }
+         List<Armor> helmets = BotContext.gameMap.getListArmors();
+        // if (BotContext.inventory.getHelmet() != null) {
+        //     return null;
+        // }
         
         Armor nearestHelmet = null;
         double minDistance = Double.MAX_VALUE;
@@ -217,10 +217,10 @@ public class ItemFinder {
     }
 
     private SupportItem getNearestSupportItem() {
-        List<SupportItem> currentSupportItems = BotContext.inventory.getListSupportItem();
-        if (currentSupportItems != null && currentSupportItems.size() == 4) {
-            return null;
-        }
+        // List<SupportItem> currentSupportItems = BotContext.inventory.getListSupportItem();
+        // if (currentSupportItems != null && currentSupportItems.size() == 4) {
+        //     return null;
+        // }
 
         List<SupportItem> supportItems = BotContext.gameMap.getListSupportItems();
         SupportItem nearestSupportItem = null;
@@ -247,7 +247,7 @@ public class ItemFinder {
     public void findPathToItem() throws IOException {
         if (actionCount == BotMemory.actionCount) {
             // nếu actionCount không thay đổi, không cần tìm lại đường đi
-            return;
+            return ;
         }
         actionCount = BotMemory.actionCount;
 
@@ -266,40 +266,44 @@ public class ItemFinder {
             pathToChest, pathToArmor, pathToHelmet, pathToHealthItem
         };
 
-        String[] types = {
-            "Gun", "Melee", "Throwable", "Special",
-            "Chest", "Armor", "Helmet", "HealthItem"
+        ElementType[] types = {
+            ElementType.GUN, ElementType.MELEE, ElementType.THROWABLE, ElementType.SPECIAL,
+            ElementType.CHEST, ElementType.ARMOR, ElementType.HELMET, ElementType.SUPPORT_ITEM
         };
 
-        String bestPath = null;
-        String bestType = null;
+        nearestItem = null;
+        pathToItem = null;
 
         for (int i = 0; i < pathsArray.length; i++) {
             String path = pathsArray[i];
             if (path == null) {
                 continue;
             }
-            if (bestPath == null || path.length() < bestPath.length()) {
-                bestPath = path;
-                bestType = types[i];
+            if (pathToItem == null || path.length() < pathToItem.length()) {
+                pathToItem = path;
+                nearestItem = types[i];
             }
         }
 
         // System.err.println("Best path type: " + bestType);
         // System.err.println("Best path: " + bestPath);
-
-        pathToItem = bestPath;
     }
 
     public Boolean action() throws IOException {
         findPathToItem();
-        String pathToChest = findPathToItem(getNearestChest());
         if (pathToItem != null) {
             if (pathToItem.length() == 1 && pathToChest != null && pathToChest.length() == 1) {
                 System.out.println("Attacking along path: " + pathToItem);
                 hero.botAttack( String.valueOf(pathToItem.charAt(0)));
                 return true;
             } else if (pathToItem.length() == 0) {
+                if (nearestItem != null) {
+                    String itemId = getInventoryWeapon(nearestItem);
+                    if (itemId != null) {
+                        hero.botRevokeItem(itemId);
+                        return true;
+                    }
+                }
                 System.out.println("Picking up item");
                 hero.botPickupItem();
                 return true;
@@ -314,4 +318,34 @@ public class ItemFinder {
         }
         return false;
     }
+    private SupportItem findWorstSupportItem() {
+        List<SupportItem> items = BotContext.inventory.getListSupportItem();
+        if (items == null || items.isEmpty()) return null;
+
+        return items.stream()
+                .min(Comparator.comparingInt(SupportItem::getHealingHP))
+                .orElse(null);
+    }
+
+    private String getInventoryWeapon(ElementType type) {
+        List<SupportItem> supportItems = BotContext.inventory.getListSupportItem();
+        Element[] inventory = {
+            BotContext.inventory.getGun(),
+            BotContext.inventory.getMelee() != WeaponFactory.getWeaponById("HAND") ? BotContext.inventory.getMelee() : null,
+            BotContext.inventory.getThrowable(),
+            BotContext.inventory.getSpecial(),
+            BotContext.inventory.getArmor(),
+            BotContext.inventory.getHelmet(),
+            (supportItems != null && supportItems.size() == 4) ?  findWorstSupportItem() : null
+        };
+
+        for (Element item : inventory) {
+            if (item != null && item.getType() == type) {
+                return item.getId();
+            }
+        }
+
+        return null;
+    }
+
 }

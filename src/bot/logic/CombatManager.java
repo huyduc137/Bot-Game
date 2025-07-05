@@ -16,7 +16,7 @@ import bot.memory.BotMemory;
 
 public class CombatManager {
     Hero hero;
-    private static final int HEALTH_THRESHOLD_TO_HEAL = 10;
+    private static final int HEALTH_THRESHOLD_TO_HEAL = 40;
     private static final String ALLY_NPC_ID = "SPIRIT";
 
     public CombatManager(Hero hero) {
@@ -49,7 +49,7 @@ public class CombatManager {
             }
 
             Ally spiritAlly = findNearestAlly(ALLY_NPC_ID);
-            if (spiritAlly != null) {
+            if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
                 System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
                 String pathToAlly = PathUtils.getShortestPath(
                         BotContext.gameMap,
@@ -132,7 +132,7 @@ public class CombatManager {
         }
         String previousAction = BotMemory.lastAction.get(BotMemory.lastAction.size() - 1);
         if (distance == 1) {
-            if (previousAction == "attack") {
+            if (previousAction == "attack" && BotContext.inventory.getGun() != null) {
                 hero.botShoot(path);
                 return true;
             }
