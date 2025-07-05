@@ -49,21 +49,21 @@ public class CombatManager {
                 return true;
             }
 
-            Ally spiritAlly = findNearestAlly(ALLY_NPC_ID);
-            if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
-                System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
-                String pathToAlly = PathUtils.getShortestPath(
-                        BotContext.gameMap,
-                        PathPlanner.getNodesToAvoid(true, false),
-                        BotContext.player,
-                        spiritAlly,
-                        false
-                );
-                if (pathToAlly != null && !pathToAlly.isEmpty()) {
-                    hero.move(pathToAlly);
-                    return true;
-                }
-            }
+            // Ally spiritAlly = findNearestAlly(ALLY_NPC_ID);
+            // if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
+            //     System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
+            //     String pathToAlly = PathUtils.getShortestPath(
+            //             BotContext.gameMap,
+            //             PathPlanner.getNodesToAvoid(true, false),
+            //             BotContext.player,
+            //             spiritAlly,
+            //             false
+            //     );
+            //     if (pathToAlly != null && !pathToAlly.isEmpty()) {
+            //         hero.move(pathToAlly);
+            //         return true;
+            //     }
+            // }
         }
         return false;
     }

@@ -73,9 +73,13 @@ public class ItemFinder {
         // }
         List<Weapon> Guns = BotContext.gameMap.getAllGun();
         Weapon nearestGun = null;
+        Weapon currentGun = BotContext.inventory.getGun();
         int minDistance = Integer.MAX_VALUE;
         for (Weapon gun : Guns) {
             if (!isItemInSafeZone(gun)) {
+                continue;
+            }
+            if (currentGun != null && gun.getDamage() * gun.getUseCount() <= currentGun.getDamage() * currentGun.getUseCount()) {
                 continue;
             }
             String path = findPathToItem(gun);
@@ -89,17 +93,22 @@ public class ItemFinder {
     }
 
     private Weapon getNearestMelee() {
-        // if (BotContext.inventory.getMelee() != WeaponFactory.getWeaponById("HAND")) {
-        //     return null; // If the player already has a melee weapon, no need to find one
-        // }
+    // if (BotContext.inventory.getMelee() != WeaponFactory.getWeaponById("HAND")) {
+    //     return null; // If the player already has a melee weapon, no need to find one
+    // }
         List<Weapon> MeleeWeapons = BotContext.gameMap.getAllMelee();
         Weapon nearestMelee = null;
+        Weapon currentMelee = BotContext.inventory.getMelee();
         double minDistance = Double.MAX_VALUE;
         for (Weapon melee : MeleeWeapons) {
             if (!isItemInSafeZone(melee)) {
+            continue;
+            }
+
+            if (currentMelee != WeaponFactory.getWeaponById("HAND") && melee.getDamage() <= currentMelee.getDamage()) {
                 continue;
             }
-            
+
             String path = findPathToItem(melee);
             int distance = (path == null ? Integer.MAX_VALUE : path.length());
             if (distance < minDistance) {
@@ -116,9 +125,13 @@ public class ItemFinder {
         // }
         List<Weapon> Throwables = BotContext.gameMap.getAllThrowable();
         Weapon nearestThrowable = null;
+        Weapon currentThrowable = BotContext.inventory.getThrowable();
         double minDistance = Double.MAX_VALUE;
         for (Weapon throwable : Throwables) {
             if (!isItemInSafeZone(throwable)){
+                continue;
+            }
+            if (currentThrowable != null && throwable.getDamage() * throwable.getUseCount() <= currentThrowable.getDamage() * currentThrowable.getDamage()) {
                 continue;
             }
             String path = findPathToItem(throwable);
