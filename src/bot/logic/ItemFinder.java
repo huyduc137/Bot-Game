@@ -188,9 +188,9 @@ public class ItemFinder {
 
     private Armor getNearestArmor() {
          List<Armor> armors = BotContext.gameMap.getListArmors();
-        // if (BotContext.inventory.getArmor() != null) {
-        //     return null;
-        // }
+        if (BotContext.inventory.getArmor() != null) {
+            return null;
+        }
         Armor nearestArmor = null;
         double minDistance = Double.MAX_VALUE;
         for (Armor armor : armors) {
@@ -209,9 +209,9 @@ public class ItemFinder {
 
     private Armor getNearestHelmet() {
          List<Armor> helmets = BotContext.gameMap.getListArmors();
-        // if (BotContext.inventory.getHelmet() != null) {
-        //     return null;
-        // }
+        if (BotContext.inventory.getHelmet() != null) {
+            return null;
+        }
         
         Armor nearestHelmet = null;
         double minDistance = Double.MAX_VALUE;

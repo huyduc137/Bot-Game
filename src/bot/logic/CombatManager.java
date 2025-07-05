@@ -17,7 +17,7 @@ import bot.memory.BotMemory;
 
 public class CombatManager {
     Hero hero;
-    private static final int HEALTH_THRESHOLD_TO_HEAL = 40;
+    private static final int HEALTH_THRESHOLD_TO_HEAL = 60;
     private static final String ALLY_NPC_ID = "SPIRIT";
 
     public CombatManager(Hero hero) {
