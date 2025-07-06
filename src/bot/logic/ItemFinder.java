@@ -166,6 +166,9 @@ public class ItemFinder {
     }
 
     private Obstacle getNearestChest() {
+        if (hasEssentialItems()) {
+            return null;
+        }
         List<Obstacle> chests = BotContext.gameMap.getListObstacles().stream()
                 .filter(obstacle -> ElementType.CHEST.equals(obstacle.getType()))
                 .collect(Collectors.toList());
@@ -359,6 +362,21 @@ public class ItemFinder {
         }
 
         return null;
+    }
+
+    private boolean hasEssentialItems() {
+        boolean hasGun = BotContext.inventory.getGun() != null;
+
+        boolean hasMelee = BotContext.inventory.getMelee() != null &&
+                !BotContext.inventory.getMelee().equals(WeaponFactory.getWeaponById("HAND"));
+
+        boolean hasThrowable = BotContext.inventory.getThrowable() != null;
+
+        List<SupportItem> supportItems = BotContext.inventory.getListSupportItem();
+        int supportCount = (supportItems != null) ? supportItems.size() : 0;
+        boolean hasAtLeastTwoSupportItems = supportCount >= 2;
+
+        return hasGun && hasMelee && hasThrowable && hasAtLeastTwoSupportItems;
     }
 
 }
