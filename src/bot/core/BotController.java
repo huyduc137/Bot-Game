@@ -1,11 +1,13 @@
 package bot.core;
 
 import sdk.Hero;
+import sdk.HeroActionType;
 import bot.BotContext;
 import bot.navigation.SafeZoneNavigator;
 import bot.logic.CombatManager;
 import bot.logic.ItemFinder;
 import bot.memory.BotMemory;
+
 
 public class BotController {
     private final Hero hero;
@@ -26,14 +28,14 @@ public class BotController {
                 System.out.println("No update data received.");
                 return; // Không có dữ liệu cập nhật
             }            
-            if (!BotContext.updateAll(hero, args)) {
+            if (!BotContext.update(hero, args)) {
                 // xử lý khi không cập nhật được dữ liệu
                 System.out.println("Failed to update game context.");
             }
 
             // kiểm tra có lặp không
 
-             if ("move".equals(BotMemory.handledRepeatingSameAction())) {
+             if (HeroActionType.MOVE == BotMemory.checkRepeatedActions()) {
                  hero.botIdle();
                  return;
              }
