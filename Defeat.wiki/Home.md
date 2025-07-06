@@ -8,4 +8,3 @@ Chào mừng đến với tài liệu Wiki của dự án **Defeat** – bot AI 
 - [[Navigation-PathPlanning|Hệ thống di chuyển]]
 - [[Combat-TargetSelector|Chọn mục tiêu]]
 - [[Structure-CodeLayout|Cấu trúc mã nguồn]]
-- [[Notes-Knowledge|Ghi chú kỹ thuật khác]]
