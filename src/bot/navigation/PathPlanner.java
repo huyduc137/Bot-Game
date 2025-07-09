@@ -11,6 +11,7 @@ import jsclub.codefest.sdk.model.npcs.Enemy;
 import jsclub.codefest.sdk.base.Node;
 
 import bot.BotContext;
+import bot.memory.BotMemory;
 
 public class PathPlanner {
     public static List<Node> getNodesToAvoid(boolean avoidPlayers, boolean avoidEnemies) {
@@ -39,13 +40,7 @@ public class PathPlanner {
         }
 
         if (avoidEnemies) {
-            for (Enemy enemy : BotContext.gameMap.getListEnemies()) {
-                for (int i = -1; i <= 1; i++) {
-                    for (int j = -1; j <= 1; j++) {
-                        restrictedNodes.add(new Node(enemy.getX() + i, enemy.getY() + j));
-                    }
-                }
-            }
+            restrictedNodes.addAll(BotMemory.getAffectedNodes(false));
         }
         return restrictedNodes;
     }
