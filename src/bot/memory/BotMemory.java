@@ -1,6 +1,5 @@
 package bot.memory;
 
-import bot.utils.GameUtils;
 import jsclub.codefest.sdk.base.Node;
 import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.players.Player;
@@ -8,6 +7,7 @@ import jsclub.codefest.sdk.model.players.Player;
 import java.util.List;
 import java.util.ArrayList;
 
+import bot.utils.GameUtils;
 import sdk.HeroActionType;
 
 public class BotMemory {
@@ -121,6 +121,69 @@ public class BotMemory {
             trackedNpcSegments.add(new Node[] { currentNpc, currentNpc });
         }
     }
+
+
+
+    private static Node getNextPosition(Node currentNpc, boolean isAlly) {
+        if (actionCount == 1) {
+            return currentNpc;
+        }
+
+        Node previousNpc = null;
+
+        List<Node> npcList = isAlly
+                ? recentGameMaps.get(recentGameMaps.size() - 2).getListAllies()
+                .stream().map(a -> (Node) a).toList()
+                : recentGameMaps.get(recentGameMaps.size() - 2).getListEnemies()
+                .stream().map(a -> (Node) a).toList();
+
+        for (Node npc : npcList) {
+            Node vecTo = GameUtils.vectorBetween(currentNpc, npc);
+            if (Math.abs(vecTo.getX()) + Math.abs(vecTo.getY()) == 1) {
+                previousNpc = npc;
+                break;
+            }
+        }
+
+        if (previousNpc == null) return null;
+
+        for (Node[] segment : trackedNpcSegments) {
+            if (GameUtils.isLE(segment[0], currentNpc) && GameUtils.isLE(currentNpc, segment[1])) {
+                if (currentNpc.equals(segment[0]) || currentNpc.equals(segment[1])) {
+                    return previousNpc;
+                } else {
+                    Node vecTo = GameUtils.vectorBetween(previousNpc, currentNpc);
+                    return new Node(currentNpc.getX() - vecTo.getX(), currentNpc.getY() - vecTo.getY());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static List<Node> getAffectedNodes(boolean isAlly) {
+        List<Node> npcList = isAlly
+                ? recentGameMaps.get(recentGameMaps.size() - 2).getListAllies()
+                .stream().map(a -> (Node) a).toList()
+                : recentGameMaps.get(recentGameMaps.size() - 2).getListEnemies()
+                .stream().map(a -> (Node) a).toList();
+
+        List<Node> affectedNodes = new ArrayList<>();
+
+        for (Node npc : npcList) {
+            Node nextPos = getNextPosition(npc, isAlly);
+            if (nextPos == null) continue;
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    affectedNodes.add(new Node(nextPos.getX() + dx, nextPos.getY() + dy));
+                }
+            }
+        }
+
+        return affectedNodes;
+    }
+
 
 
 }

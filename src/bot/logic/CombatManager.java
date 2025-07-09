@@ -2,6 +2,7 @@ package bot.logic;
 
 import jsclub.codefest.sdk.model.support_items.SupportItem;
 import jsclub.codefest.sdk.model.npcs.Ally;
+import jsclub.codefest.sdk.base.Node;
 import jsclub.codefest.sdk.model.players.Player;
 import jsclub.codefest.sdk.model.weapon.Weapon;
 import jsclub.codefest.sdk.algorithm.PathUtils;
@@ -18,7 +19,6 @@ import bot.memory.BotMemory;
 public class CombatManager {
     Hero hero;
     private static final int HEALTH_THRESHOLD_TO_HEAL = 60;
-    private static final String ALLY_NPC_ID = "SPIRIT";
 
     public CombatManager(Hero hero) {
         this.hero = hero;
@@ -49,21 +49,21 @@ public class CombatManager {
                 return true;
             }
 
-            // Ally spiritAlly = findNearestAlly(ALLY_NPC_ID);
-            // if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
-            //     System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
-            //     String pathToAlly = PathUtils.getShortestPath(
-            //             BotContext.gameMap,
-            //             PathPlanner.getNodesToAvoid(true, false),
-            //             BotContext.player,
-            //             spiritAlly,
-            //             false
-            //     );
-            //     if (pathToAlly != null && !pathToAlly.isEmpty()) {
-            //         hero.move(pathToAlly);
-            //         return true;
-            //     }
-            // }
+             Node spiritAlly = findNearestAffectedNodeFromAllies();
+             if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
+                 System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
+                 String pathToAlly = PathUtils.getShortestPath(
+                         BotContext.gameMap,
+                         PathPlanner.getNodesToAvoid(true, false),
+                         BotContext.player,
+                         spiritAlly,
+                         false
+                 );
+                 if (pathToAlly != null && !pathToAlly.isEmpty()) {
+                     hero.move(pathToAlly);
+                     return true;
+                 }
+             }
         }
         return false;
     }
@@ -156,11 +156,9 @@ public class CombatManager {
                 .orElse(null);
     }
 
-    private Ally findNearestAlly(String allyId) {
-        return BotContext.gameMap.getListAllies().stream()
-                .filter(ally -> ally.getId().equals(allyId))
-                .min(Comparator.comparingInt(ally -> PathUtils.distance(BotContext.player, ally)))
+    private Node findNearestAffectedNodeFromAllies() {
+        return BotMemory.getAffectedNodes(true).stream()
+                .min(Comparator.comparingInt(node -> PathUtils.distance(BotContext.player, node)))
                 .orElse(null);
     }
-
 }
