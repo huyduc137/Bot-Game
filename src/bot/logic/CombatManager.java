@@ -2,7 +2,7 @@ package bot.logic;
 
 import jsclub.codefest.sdk.model.support_items.SupportItem;
 import jsclub.codefest.sdk.model.npcs.Ally;
-import jsclub.codefest.sdk.model.GameMap;
+import jsclub.codefest.sdk.base.Node;
 import jsclub.codefest.sdk.model.players.Player;
 import jsclub.codefest.sdk.model.weapon.Weapon;
 import jsclub.codefest.sdk.algorithm.PathUtils;
@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import sdk.Hero;
+import sdk.HeroActionType;
 import bot.BotContext;
 import bot.navigation.PathPlanner;
 import bot.memory.BotMemory;
@@ -18,7 +19,6 @@ import bot.memory.BotMemory;
 public class CombatManager {
     Hero hero;
     private static final int HEALTH_THRESHOLD_TO_HEAL = 60;
-    private static final String ALLY_NPC_ID = "SPIRIT";
 
     public CombatManager(Hero hero) {
         this.hero = hero;
@@ -48,22 +48,12 @@ public class CombatManager {
                 hero.botUseItem(bestSupport.getId());
                 return true;
             }
-
-            // Ally spiritAlly = findNearestAlly(ALLY_NPC_ID);
-            // if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
-            //     System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
-            //     String pathToAlly = PathUtils.getShortestPath(
-            //             BotContext.gameMap,
-            //             PathPlanner.getNodesToAvoid(true, false),
-            //             BotContext.player,
-            //             spiritAlly,
-            //             false
-            //     );
-            //     if (pathToAlly != null && !pathToAlly.isEmpty()) {
-            //         hero.move(pathToAlly);
-            //         return true;
-            //     }
-            // }
+            String pathToAlly = PathPlanner.getPathToAlly();
+            if (pathToAlly != null &&  !pathToAlly.isEmpty()) {
+                System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
+                hero.move(pathToAlly);
+                return true;
+            }
         }
         return false;
     }
@@ -78,19 +68,19 @@ public class CombatManager {
         }
         
         Weapon rangedWeapons[] = {BotContext.inventory.getGun(), BotContext.inventory.getSpecial(), BotContext.inventory.getThrowable()};
-        String types[] = {"shoot", "useSpecial", "throwItem"};
+        HeroActionType[] types = {HeroActionType.SHOOT, HeroActionType.USE_SPECIAL, HeroActionType.THROW_ITEM};
         Weapon bestWeapon = null;
-        String previousAction = BotMemory.lastAction.get(BotMemory.lastAction.size() - 1);
+        HeroActionType previousAction = BotMemory.recentActions.get(BotMemory.recentActions.size() - 1);
         int distance = PathUtils.distance(BotContext.player, enemy);
         boolean check = false;
         for (int i = 0; i < 3; i++) {
             Weapon weapon = rangedWeapons[i];
-            check |= types[i].equals(previousAction);
-            if (weapon == null || types[i].equals(previousAction)) {
+            check |= types[i] == previousAction;
+            if (weapon == null || types[i] == previousAction) {
                 continue; // Skip if no weapon available
             }
-            if ((types[i] != "throwItem" && weapon.getRange()[1] >= distance) || 
-                (types[i] == "throwItem" && weapon.getRange()[1] - 1 <= distance && distance <= weapon.getRange()[1] + 1)) {
+            if ((types[i] != HeroActionType.THROW_ITEM && weapon.getRange()[1] >= distance) || 
+                (types[i] == HeroActionType.THROW_ITEM && weapon.getRange()[1] - 1 <= distance && distance <= weapon.getRange()[1] + 1)) {
                 if (bestWeapon == null || weapon.getDamage() >= bestWeapon.getDamage()) {
                     bestWeapon = weapon; // Select the weapon with the highest damage within range
                 }
@@ -131,9 +121,9 @@ public class CombatManager {
         if (path == null || path.isEmpty()) {
             return false; // No valid path to the enemy
         }
-        String previousAction = BotMemory.lastAction.get(BotMemory.lastAction.size() - 1);
+        HeroActionType previousAction = BotMemory.recentActions.get(BotMemory.recentActions.size() - 1);
         if (distance == 1) {
-            if (previousAction == "attack" && BotContext.inventory.getGun() != null) {
+            if (previousAction == HeroActionType.ATTACK && BotContext.inventory.getGun() != null) {
                 hero.botShoot(path);
                 return true;
             }
@@ -155,12 +145,4 @@ public class CombatManager {
                 .max(Comparator.comparingInt(SupportItem::getHealingHP))
                 .orElse(null);
     }
-
-    private Ally findNearestAlly(String allyId) {
-        return BotContext.gameMap.getListAllies().stream()
-                .filter(ally -> ally.getId().equals(allyId))
-                .min(Comparator.comparingInt(ally -> PathUtils.distance(BotContext.player, ally)))
-                .orElse(null);
-    }
-
 }

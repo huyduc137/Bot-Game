@@ -1,12 +1,12 @@
 package sdk;
 
-import jsclub.codefest.sdk.model.Inventory;
 import jsclub.codefest.sdk.factory.SupportItemFactory;
 
 import java.io.IOException;
 
 import bot.BotContext;
 import bot.memory.BotMemory;
+import sdk.HeroActionType;
 
 
 public class Hero extends jsclub.codefest.sdk.Hero {
@@ -22,7 +22,7 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         }
         System.out.println("Action: Moving");
         super.move(direction);
-        BotMemory.lastAction.add("move");
+        BotMemory.recentActions.add(HeroActionType.MOVE);
     }
 
     public void botAttack(String direction) throws IOException {
@@ -32,7 +32,7 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         System.out.println("Action: Attacking");
         super.attack(direction.substring(0, 1)); // Ensure direction is a single character
         // Add the action to the pathAction list            
-        BotMemory.lastAction.add("attack");
+        BotMemory.recentActions.add(HeroActionType.ATTACK);
     }
 
     public void botShoot(String direction) throws IOException {
@@ -42,7 +42,7 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         System.out.println("Action: Shooting");
         super.shoot(direction.substring(0, 1)); // Ensure direction is a single character
         // Add the action to the pathAction list
-        BotMemory.lastAction.add("shoot");
+        BotMemory.recentActions.add(HeroActionType.SHOOT);
     }
 
     public void botThrowItem(String direction) throws IOException {
@@ -51,7 +51,7 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         }
         System.out.println("Action: Throwing Item");
         super.throwItem(direction.substring(0, 1));
-        BotMemory.lastAction.add("throwItem");
+        BotMemory.recentActions.add(HeroActionType.THROW_ITEM);
     }
 
     public void botUseSpecial(String direction) throws IOException {
@@ -61,14 +61,14 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         System.out.println("Action: Using Special");
         super.useSpecial(direction.substring(0, 1)); // Ensure direction is a single character
         // Add the action to the pathAction list
-        BotMemory.lastAction.add("useSpecial");
+        BotMemory.recentActions.add(HeroActionType.USE_SPECIAL);
     }
 
     public void botPickupItem() throws IOException {
         //         
         System.out.println("Action: Picking up item");
         super.pickupItem();
-        BotMemory.lastAction.add("pickupItem");
+        BotMemory.recentActions.add(HeroActionType.PICKUP_ITEM);
     }
 
     public void botUseItem(String itemId) throws IOException {
@@ -84,7 +84,7 @@ public class Hero extends jsclub.codefest.sdk.Hero {
 
         System.out.println("Action: Using item with ID " + itemId);
         super.useItem(itemId);
-        BotMemory.lastAction.add("useItem");
+        BotMemory.recentActions.add(HeroActionType.USE_ITEM);
     }
 
 
@@ -95,13 +95,13 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         }
         System.out.println("Action: Revoking item with ID " + itemId);
         super.revokeItem(itemId);
-        BotMemory.lastAction.add("revokeItem");
+        BotMemory.recentActions.add(HeroActionType.REVOKE_ITEM);
     }
 
     public void botIdle() throws IOException {
         // 
         System.out.println("Action: Idle");
-        BotMemory.lastAction.add("idle");
+        BotMemory.recentActions.add(HeroActionType.IDLE);
     }
 
 }
