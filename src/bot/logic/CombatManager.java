@@ -117,7 +117,7 @@ public class CombatManager {
             return false;
         }
         int distance = PathUtils.distance(BotContext.player, enemy);
-        String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(distance > 2, true), BotContext.player, enemy, false);
+        String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(distance > 2, false), BotContext.player, enemy, false);
         if (path == null || path.isEmpty()) {
             return false; // No valid path to the enemy
         }
