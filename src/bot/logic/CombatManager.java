@@ -48,22 +48,12 @@ public class CombatManager {
                 hero.botUseItem(bestSupport.getId());
                 return true;
             }
-
-             Node spiritAlly = findNearestAffectedNodeFromAllies();
-             if (spiritAlly != null && PathUtils.checkInsideSafeArea(spiritAlly, BotContext.gameMap.getSafeZone(), BotContext.gameMap.getMapSize())) {
-                 System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
-                 String pathToAlly = PathUtils.getShortestPath(
-                         BotContext.gameMap,
-                         PathPlanner.getNodesToAvoid(true, true),
-                         BotContext.player,
-                         spiritAlly,
-                         false
-                 );
-                 if (pathToAlly != null && !pathToAlly.isEmpty()) {
-                     hero.move(pathToAlly);
-                     return true;
-                 }
-             }
+            String pathToAlly = PathPlanner.getPathToAlly();
+            if (pathToAlly != null &&  !pathToAlly.isEmpty()) {
+                System.out.println("Low health and no items. Moving to SPIRIT ally for healing.");
+                hero.move(pathToAlly);
+                return true;
+            }
         }
         return false;
     }
@@ -153,12 +143,6 @@ public class CombatManager {
 
         return hero.getInventory().getListSupportItem().stream()
                 .max(Comparator.comparingInt(SupportItem::getHealingHP))
-                .orElse(null);
-    }
-
-    private Node findNearestAffectedNodeFromAllies() {
-        return BotMemory.getAffectedNodes(true).stream()
-                .min(Comparator.comparingInt(node -> PathUtils.distance(BotContext.player, node)))
                 .orElse(null);
     }
 }

@@ -122,8 +122,6 @@ public class BotMemory {
         }
     }
 
-
-
     private static Node getNextPosition(Node currentNpc, boolean isAlly) {
         if (actionCount == 1) {
             return currentNpc;
@@ -146,15 +144,18 @@ public class BotMemory {
 
         if (previousNpc == null) return null;
 
+        Node [] segment = getNpcPathSegment(currentNpc);
 
-        for (Node[] segment : trackedNpcSegments) {
-            if (GameUtils.isLE(segment[0], currentNpc) && GameUtils.isLE(currentNpc, segment[1])) {
-                if (currentNpc.equals(segment[0]) || currentNpc.equals(segment[1])) {
-                    return previousNpc;
-                } else {
-                    Node vecTo = GameUtils.vectorBetween(previousNpc, currentNpc);
-                    return new Node(currentNpc.getX() - vecTo.getX(), currentNpc.getY() - vecTo.getY());
-                }
+        if (segment == null) {
+            return previousNpc;  // hoặc return null; tùy ý đồ logic
+        }
+
+        if (GameUtils.isLE(segment[0], currentNpc) && GameUtils.isLE(currentNpc, segment[1])) {
+            if (currentNpc.equals(segment[0]) || currentNpc.equals(segment[1])) {
+                return previousNpc;
+            } else {
+                Node vecTo = GameUtils.vectorBetween(previousNpc, currentNpc);
+                return new Node(currentNpc.getX() - vecTo.getX(), currentNpc.getY() - vecTo.getY());
             }
         }
 
@@ -182,5 +183,12 @@ public class BotMemory {
         return affectedNodes;
     }
 
-
+    public static Node[] getNpcPathSegment(Node currentNpc) {
+        for (Node[] segment : trackedNpcSegments) {
+            if (GameUtils.isLE(segment[0], currentNpc) && GameUtils.isLE(currentNpc, segment[1])) {
+                return segment;
+            }
+        }
+        return null;
+    }
 }

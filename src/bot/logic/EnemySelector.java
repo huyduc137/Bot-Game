@@ -17,7 +17,7 @@ import bot.BotContext;
 import bot.navigation.PathPlanner;
 
 public class EnemySelector {
-    private static final int MAX_DISTANCE = 100; // Maximum distance to consider an enemy
+    private static final int MAX_DISTANCE = 500; // Maximum distance to consider an enemy
 
     private static boolean isPathClear(Node nodeStart, Node nodeEnd) {
         String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(false, false), nodeStart, nodeEnd, false);
