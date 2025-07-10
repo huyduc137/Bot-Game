@@ -1,5 +1,8 @@
 package bot.core;
 
+import jsclub.codefest.sdk.base.Node;
+
+
 import sdk.Hero;
 import sdk.HeroActionType;
 import bot.BotContext;
@@ -34,6 +37,7 @@ public class BotController {
             }
 
             // kiểm tra có lặp không
+
 
              if (HeroActionType.MOVE == BotMemory.checkRepeatedActions()) {
                  hero.botIdle();

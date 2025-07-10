@@ -28,7 +28,6 @@ public class BotContext {
 
             if (player == null || player.getHealth() == 0) {
                 System.out.println("Player is dead or data not available.");
-                BotMemory.previousPositions.clear();
                 return false;
             }
             BotMemory.previousPositions.add(player);

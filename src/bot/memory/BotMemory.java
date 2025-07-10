@@ -13,23 +13,23 @@ import sdk.HeroActionType;
 public class BotMemory {
     public static final Node NULL_NODE = new Node(-1, -1);
 
-    private static final List<GameMap> recentGameMaps = new ArrayList<> ();
     public static List<Node> previousPositions = new ArrayList<>();
     public static List<HeroActionType> recentActions = new ArrayList<>();
     public static int actionCount = 0;
     public static List<Node[]> trackedNpcSegments = new ArrayList<>();
+    public static List<Node>[] recentAllys =  new List[2];
+    public static List<Node>[] recentEnemies =   new List[2];
 
     public static void update(GameMap gameMap) {
-        recentGameMaps.add(gameMap);
-        if (recentGameMaps.size() > 10) {
-            recentGameMaps.remove(0); // Xoá phần tử đầu tiên
-        }
 
-        for (Node npc : gameMap.getListAllies()) {
+        recentAllys[actionCount & 1] = new ArrayList<>(gameMap.getListAllies());
+        recentEnemies[actionCount & 1] = new ArrayList<>(gameMap.getListEnemies());
+
+        for (Node npc : recentAllys[actionCount & 1]) {
             update(npc);
         }
 
-        for (Node npc : gameMap.getListEnemies()) {
+        for (Node npc : recentEnemies[actionCount & 1]) {
             update(npc);
         }
 
@@ -131,11 +131,9 @@ public class BotMemory {
 
         Node previousNpc = null;
 
-        List<Node> npcList = isAlly
-                ? recentGameMaps.get(recentGameMaps.size() - 2).getListAllies()
-                .stream().map(a -> (Node) a).toList()
-                : recentGameMaps.get(recentGameMaps.size() - 2).getListEnemies()
-                .stream().map(a -> (Node) a).toList();
+        List<Node> npcList = ((isAlly ? recentAllys[1 - (actionCount & 1)] : recentEnemies[1 - (actionCount & 1)])
+                .stream().map(a -> (Node) a).toList());
+
 
         for (Node npc : npcList) {
             Node vecTo = GameUtils.vectorBetween(currentNpc, npc);
@@ -145,7 +143,9 @@ public class BotMemory {
             }
         }
 
+
         if (previousNpc == null) return null;
+
 
         for (Node[] segment : trackedNpcSegments) {
             if (GameUtils.isLE(segment[0], currentNpc) && GameUtils.isLE(currentNpc, segment[1])) {
@@ -162,11 +162,9 @@ public class BotMemory {
     }
 
     public static List<Node> getAffectedNodes(boolean isAlly) {
-        List<Node> npcList = isAlly
-                ? recentGameMaps.get(recentGameMaps.size() - 2).getListAllies()
-                .stream().map(a -> (Node) a).toList()
-                : recentGameMaps.get(recentGameMaps.size() - 2).getListEnemies()
-                .stream().map(a -> (Node) a).toList();
+        List<Node> npcList = ((isAlly ? recentAllys[actionCount & 1] : recentEnemies[actionCount & 1])
+                .stream().map(a -> (Node) a).toList());
+
 
         List<Node> affectedNodes = new ArrayList<>();
 
@@ -183,7 +181,6 @@ public class BotMemory {
 
         return affectedNodes;
     }
-
 
 
 }
