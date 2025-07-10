@@ -114,7 +114,6 @@ public class PathPlanner {
                 return perpendicularPath;
             }
         }
-        System.out.println(perpendicularTarget.getX() + " "  + perpendicularTarget.getY());
 
         return pathToAlly;
     }
