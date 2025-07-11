@@ -379,4 +379,19 @@ public class ItemFinder {
         return hasGun && hasMelee && hasThrowable && hasAtLeastTwoSupportItems;
     }
 
+    private Player getNearestPlayer(GameMap gameMap, Player player){
+        List <Player> otherPlayers = gameMap.getOtherPlayerInfo();
+        Player target = null;
+        int minDistance = Integer.MAX_VALUE;
+        for (Player otherPlayer : otherPlayers) {
+            if (otherPlayer.getHealth() > 0){
+                int distance =PathUtils.distance(player, otherPlayer);
+                if (distance < minDistance && PathUtils.checkInsideSafeArea(otherPlayer, gameMap.getSafeZone() , gameMap.getMapSize())) {
+                    minDistance = distance;
+                    target = otherPlayer;
+                }
+            }
+        }
+        return target;
+    }
 }
