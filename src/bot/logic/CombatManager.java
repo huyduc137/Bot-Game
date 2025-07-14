@@ -17,7 +17,7 @@ import bot.navigation.PathPlanner;
 import bot.memory.BotMemory;
 
 public class CombatManager {
-    Hero hero;
+    static Hero hero;
     private static final int HEALTH_THRESHOLD_TO_HEAL = 60;
 
     public CombatManager(Hero hero) {
@@ -25,15 +25,12 @@ public class CombatManager {
     }
 
     public boolean attackEnemy(int maxDistance) throws Exception {
-        // Tìm kiếm kẻ địch gần nhất trong phạm vi maxDistance
         Player enemy = EnemySelector.findEnemyInAttackRange();
         if (handleRangedAttack(enemy)) {
-            // Nếu có kẻ địch trong phạm vi tấn công, thực hiện tấn công    
             return true;
         }
         enemy = EnemySelector.findEnemyInRange(maxDistance);
         if (handleMeleeAttack(enemy)) {
-            // Nếu có kẻ địch trong phạm vi tấn công, thực hiện tấn công
             return true;
         }
         return false;
@@ -59,14 +56,14 @@ public class CombatManager {
     }
 
     private boolean handleRangedAttack(Player enemy) throws Exception {
-        if (enemy == null) {
-            return false; // No enemy to attack
+        if (enemy == null || enemy.getHealth() <= 0) {
+            return false;
         }
-        String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(false, false), BotContext.player, enemy, false);
+        String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(false, true), BotContext.player, enemy, false);
         if (path == null) {
             return false;
         }
-        
+
         Weapon rangedWeapons[] = {BotContext.inventory.getGun(), BotContext.inventory.getSpecial(), BotContext.inventory.getThrowable()};
         HeroActionType[] types = {HeroActionType.SHOOT, HeroActionType.USE_SPECIAL, HeroActionType.THROW_ITEM};
         Weapon bestWeapon = null;
@@ -79,7 +76,7 @@ public class CombatManager {
             if (weapon == null || types[i] == previousAction) {
                 continue; // Skip if no weapon available
             }
-            if ((types[i] != HeroActionType.THROW_ITEM && weapon.getRange()[1] >= distance) || 
+            if ((types[i] != HeroActionType.THROW_ITEM && weapon.getRange()[1] >= distance) ||
                 (types[i] == HeroActionType.THROW_ITEM && weapon.getRange()[1] - 1 <= distance && distance <= weapon.getRange()[1] + 1)) {
                 if (bestWeapon == null || weapon.getDamage() >= bestWeapon.getDamage()) {
                     bestWeapon = weapon; // Select the weapon with the highest damage within range
@@ -112,8 +109,8 @@ public class CombatManager {
         return false;
     }
 
-    private boolean handleMeleeAttack(Player enemy) throws Exception {
-        if (enemy == null) {
+    public static boolean handleMeleeAttack(Player enemy) throws Exception {
+        if (enemy == null || enemy.getHealth() <= 0) {
             return false;
         }
         int distance = PathUtils.distance(BotContext.player, enemy);

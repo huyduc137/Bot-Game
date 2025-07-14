@@ -101,12 +101,16 @@ public class EnemySelector {
         int playerY = BotContext.player.getY();
 
         for (Player enemy : BotContext.enemyPlayers) {
+            if (enemy.getHealth() <= 0) {
+                continue;
+            }
+
             int x = enemy.getX();
             int y = enemy.getY();
             if (Math.abs(x - playerX) + Math.abs(y - playerY) > maxPath) {
                 continue; // Skip if the enemy is out of range
             }
-            String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(minPath != 1 , false), BotContext.player, enemy, false);
+            String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(minPath != 1, false), BotContext.player, enemy, false);
             if (path == null) {
                 continue; // Skip if no path found
             }
@@ -114,8 +118,8 @@ public class EnemySelector {
                 minPath = path.length();
                 closestEnemy = enemy;
             } else if (minPath == path.length()) {
-                // If the path length is the same, prefer the one with higher health
-                if (closestEnemy != null && closestEnemy.getHealth() > enemy.getHealth()) {
+                // If the path length is the same, prefer the one with lower health (để dễ kết liễu hơn)
+                if (closestEnemy != null && closestEnemy.getHealth() < enemy.getHealth()) {
                     closestEnemy = enemy;
                 }
             }

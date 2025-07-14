@@ -1,32 +1,31 @@
 package bot.logic;
 
-import bot.navigation.PathPlanner;
+import bot.utils.GameUtils;
 import jsclub.codefest.sdk.algorithm.PathUtils;
+import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.obstacles.Obstacle;
 import jsclub.codefest.sdk.model.armors.Armor;
 import jsclub.codefest.sdk.model.support_items.SupportItem;
 import jsclub.codefest.sdk.model.weapon.Weapon;
-import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.players.Player;
 import jsclub.codefest.sdk.model.ElementType;
 import jsclub.codefest.sdk.model.Element;
 import jsclub.codefest.sdk.factory.WeaponFactory;
-import jsclub.codefest.sdk.factory.ArmorFactory;
 import jsclub.codefest.sdk.base.Node;
-import java.util.stream.Stream;
+
+import java.util.ArrayList;
 import java.util.stream.Collectors;
-import java.util.Objects;
 
 import sdk.Hero;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Function;
 import java.util.Comparator;
 
 import bot.BotContext;
-import bot.navigation.PathPlanner;
 import bot.memory.BotMemory;
+
+import static bot.navigation.PathPlanner.getNodesToAvoid;
 
 public class ItemFinder {
     private final Hero hero;
@@ -50,6 +49,7 @@ public class ItemFinder {
     private ElementType nearestItem;
 
     public String pathToItem;
+    public int pathToGuns = 0;
 
     public ItemFinder(Hero hero) {
         this.hero = hero;
@@ -63,7 +63,7 @@ public class ItemFinder {
         if (itemNode == null) {
             return null;
         }
-        return PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(true, false), BotContext.player, itemNode, false);
+        return PathUtils.getShortestPath(BotContext.gameMap, getNodesToAvoid(true, false), BotContext.player, itemNode, false);
     }
 
 
@@ -331,6 +331,7 @@ public class ItemFinder {
         } else {
             System.out.println("No path to item found");
             pathToItem = null; // Reset pathToItem if no item is found
+            pathToGuns = 1;
         }
         return false;
     }
@@ -379,19 +380,54 @@ public class ItemFinder {
         return hasGun && hasMelee && hasThrowable && hasAtLeastTwoSupportItems;
     }
 
-    private Player getNearestPlayer(GameMap gameMap, Player player){
-        List <Player> otherPlayers = gameMap.getOtherPlayerInfo();
-        Player target = null;
-        int minDistance = Integer.MAX_VALUE;
-        for (Player otherPlayer : otherPlayers) {
-            if (otherPlayer.getHealth() > 0){
-                int distance =PathUtils.distance(player, otherPlayer);
-                if (distance < minDistance && PathUtils.checkInsideSafeArea(otherPlayer, gameMap.getSafeZone() , gameMap.getMapSize())) {
-                    minDistance = distance;
-                    target = otherPlayer;
+    public boolean moveToNearestGun(GameMap gameMap, Player player) throws IOException {
+        List<Weapon> gunsInSafeZone = gameMap.getAllGun().stream()
+                .filter(gun -> PathUtils.checkInsideSafeArea(gun.getPosition(), gameMap.getSafeZone(), gameMap.getMapSize()))
+                .collect(Collectors.toList());
+        Weapon nearestGunInMethod = (Weapon) findNearestNode(player, gunsInSafeZone);
+
+        if (nearestGunInMethod != null) {
+            System.out.println("LOGIC: Found gun " + nearestGunInMethod.getId() + " in safe zone. Moving to it.");
+            String pathToGun = PathUtils.getShortestPath(gameMap, getNodesToAvoid(true, true), player, nearestGunInMethod, false);
+
+            if (pathToGun != null) {
+                if (pathToGun.isEmpty()) {
+                    hero.pickupItem();
+                } else {
+                    hero.move(pathToGun);
                 }
+            } else {
+                // Không tìm thấy đường đi dù súng tồn tại, có thể bị chặn hoàn toàn
+                System.out.println("LOGIC: Gun found but path is blocked. Moving to center.");
+                moveToSafeZone(gameMap, player);
+                return false;
             }
+        } else {
+            // Không tìm thấy súng nào trong vùng an toàn
+            System.out.println("LOGIC: No gun found in safe zone. Moving to center.");
+            moveToSafeZone(gameMap, player);
+            return false;
         }
-        return target;
+        return true;
+    }
+    private Node findNearestNode(Player myPlayer, List<? extends Node> nodes) {
+        if (nodes == null || nodes.isEmpty()) return null;
+        return nodes.stream()
+                .min(Comparator.comparingInt(node -> PathUtils.distance(myPlayer, node)))
+                .orElse(null);
+    }
+    private void moveToSafeZone(GameMap gameMap, Player myPlayer) throws IOException {
+        Node centerOfMap = GameUtils.getCenterOfMap(gameMap.getMapSize());
+        String pathToSafety = PathUtils.getShortestPath(gameMap, getNodesToAvoid(true, true), myPlayer, centerOfMap, false);
+        if (pathToSafety != null && !pathToSafety.isEmpty()) {
+            hero.move(pathToSafety);
+        }
+    }
+    public Player findNearestPlayer(GameMap gameMap, Player myPlayer) {
+        return gameMap.getOtherPlayerInfo().stream()
+                .filter(p -> p.getHealth() > 0)
+                .filter(p -> PathUtils.checkInsideSafeArea(p.getPosition(), gameMap.getSafeZone(), gameMap.getMapSize()))
+                .min(Comparator.comparingInt(p -> PathUtils.distance(myPlayer, p)))
+                .orElse(null);
     }
 }

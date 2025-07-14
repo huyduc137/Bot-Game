@@ -1,8 +1,10 @@
 package bot.core;
 
-import jsclub.codefest.sdk.base.Node;
 
-
+import jsclub.codefest.sdk.algorithm.PathUtils;
+import jsclub.codefest.sdk.model.GameMap;
+import jsclub.codefest.sdk.model.players.Player;
+import jsclub.codefest.sdk.model.weapon.Weapon;
 import sdk.Hero;
 import sdk.HeroActionType;
 import bot.BotContext;
@@ -52,8 +54,32 @@ public class BotController {
             }
 
             // ƯU TIÊN 2: nhặt đồ, ưu tiên súng;
-            if (BotContext.inventory.getGun() == null && itemFinder.action()) {
-                return ;
+            if (BotContext.inventory.getGun() == null) {
+                Player nearestPlayer = itemFinder.findNearestPlayer(BotContext.gameMap , BotContext.player);
+                if (nearestPlayer != null && PathUtils.distance(BotContext.player , nearestPlayer) <= 4 && BotContext.inventory.getMelee() != null && !BotContext.inventory.getMelee().getId().equals("HAND")){
+                    System.out.println("LOGIC: No gun, but enemy is close. Engaging with melee!");
+                    CombatManager.handleMeleeAttack(nearestPlayer);
+                    return;
+                }
+                else{
+                    System.out.println("LOGIC: Priority 2 - No gun. Finding nearest gun.");
+                    boolean checkgun = itemFinder.moveToNearestGun(BotContext.gameMap, BotContext.player);
+                    if (!checkgun){
+//                        boolean checkPathWeapon = itemFinder.action();
+//                        // Nếu không còn súng trong vùng an toàn nữa
+//                        if (!checkPathWeapon){
+//                            Weapon checkMelee = BotContext.inventory.getMelee();
+//                            if (checkMelee.getId().equals("HAND")){
+//                                // goi ham danh
+//                            }
+//
+//                        }
+                        itemFinder.action();
+                    }
+                    if (itemFinder.pathToGuns == 0){
+                        return;
+                    }
+                }
             }
 
             itemFinder.findPathToItem();

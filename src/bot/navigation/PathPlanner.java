@@ -22,8 +22,6 @@ public class PathPlanner {
         // Thêm các vật cản không thể đi qua
         for (Obstacle obstacle : BotContext.gameMap.getListObstacles()) {
             List<ObstacleTag> tags = obstacle.getTags();
-            // Sửa lại điều kiện một chút để bao gồm cả những vật cản không có tag
-            // Chỉ những vật cản có tag CAN_GO_THROUGH mới được đi qua.
             if (tags == null || !tags.contains(ObstacleTag.CAN_GO_THROUGH)) {
                 restrictedNodes.add(obstacle);
             }
@@ -31,7 +29,6 @@ public class PathPlanner {
 
         if (avoidPlayers) {
             for (Player otherPlayer : BotContext.gameMap.getOtherPlayerInfo()) {
-                // --- SỬA LỖI Ở ĐÂY ---
                 // Chỉ thêm người chơi khác vào danh sách né
                 // nếu họ không ở cùng vị trí với bot của mình.
                 // Điều này tránh trường hợp bot tự chặn đường mình khi đứng trên xác đối thủ.

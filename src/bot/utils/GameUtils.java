@@ -14,4 +14,5 @@ public class GameUtils {
     public static boolean isLE(Node x, Node y) {
         return x.getX() <= y.getX() && x.getY() <= y.getY();
     }
+
 }
