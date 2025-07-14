@@ -72,7 +72,6 @@ public class BotController {
 //                            if (checkMelee.getId().equals("HAND")){
 //                                // goi ham danh
 //                            }
-//
 //                        }
                         itemFinder.action();
                     }

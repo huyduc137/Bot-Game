@@ -39,7 +39,7 @@ public class PathPlanner {
         }
 
         if (avoidEnemies) {
-            restrictedNodes.addAll(BotMemory.getAffectedNodes(false));
+            restrictedNodes.addAll(BotMemory.getAffectedNodes());
         }
         return restrictedNodes;
     }
@@ -116,7 +116,7 @@ public class PathPlanner {
     }
 
     private static Node findNearestAffectedNodeFromAllies() {
-        return BotMemory.getAffectedNodes(true).stream()
+        return BotMemory.getAffectedNodes().stream()
                 .min(Comparator.comparingInt(node -> PathUtils.distance(BotContext.player, node)))
                 .orElse(null);
     }

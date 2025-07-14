@@ -15,6 +15,7 @@ public class BotContext {
     public static Player player;
     public static Inventory inventory;
     public static List<Player> enemyPlayers = new ArrayList<>();
+    public static int step = 0;
 
     public static boolean update(Hero hero, Object... args) {
         try {

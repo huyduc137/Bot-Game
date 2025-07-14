@@ -1,11 +1,14 @@
 package bot.memory;
 
+import bot.BotContext;
 import jsclub.codefest.sdk.base.Node;
 import jsclub.codefest.sdk.model.GameMap;
+import jsclub.codefest.sdk.model.effects.Effect;
 import jsclub.codefest.sdk.model.players.Player;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import bot.utils.GameUtils;
 import sdk.HeroActionType;
@@ -162,25 +165,21 @@ public class BotMemory {
         return null;
     }
 
-    public static List<Node> getAffectedNodes(boolean isAlly) {
-        List<Node> npcList = ((isAlly ? recentAllys[actionCount & 1] : recentEnemies[actionCount & 1])
-                .stream().map(a -> (Node) a).toList());
-
-
-        List<Node> affectedNodes = new ArrayList<>();
-
-        for (Node npc : npcList) {
-            Node nextPos = getNextPosition(npc, isAlly);
-            if (nextPos == null) continue;
-
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    affectedNodes.add(new Node(nextPos.getX() + dx, nextPos.getY() + dy));
-                }
-            }
+    public static List<Node> getAffectedNodes() {
+        if (BotContext.gameMap == null || BotContext.gameMap.getCurrentPlayer() == null) {
+            // Nếu chưa có thông tin map hoặc người chơi, trả về danh sách rỗng
+            return new ArrayList<>();
         }
 
-        return affectedNodes;
+        List<Effect> effects = BotContext.gameMap.getHeroEffect();
+        if (effects == null || effects.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return effects.stream()
+                .filter(effect -> "STUN".equals(effect.id) || "BLIND".equals(effect.id)) // Ví dụ: chỉ né các hiệu ứng làm choáng/mù
+                .map(effect -> BotContext.player.getPosition()) // Giả định hiệu ứng áp dụng tại vị trí người chơi
+                .collect(Collectors.toList());
     }
 
     public static Node[] getNpcPathSegment(Node currentNpc) {

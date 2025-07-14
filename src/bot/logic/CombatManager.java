@@ -56,6 +56,7 @@ public class CombatManager {
     }
 
     private boolean handleRangedAttack(Player enemy) throws Exception {
+        int sumWeapons = 0;
         if (enemy == null || enemy.getHealth() <= 0) {
             return false;
         }
@@ -67,10 +68,15 @@ public class CombatManager {
         Weapon rangedWeapons[] = {BotContext.inventory.getGun(), BotContext.inventory.getSpecial(), BotContext.inventory.getThrowable()};
         HeroActionType[] types = {HeroActionType.SHOOT, HeroActionType.USE_SPECIAL, HeroActionType.THROW_ITEM};
         Weapon bestWeapon = null;
+        if (BotMemory.recentActions.isEmpty()) {
+            System.out.println("LOGIC: recentActions is empty");
+            return false; // Nếu danh sách hành động rỗng, không làm gì cả.
+        }
         HeroActionType previousAction = BotMemory.recentActions.get(BotMemory.recentActions.size() - 1);
         int distance = PathUtils.distance(BotContext.player, enemy);
         boolean check = false;
         for (int i = 0; i < 3; i++) {
+            sumWeapons++;
             Weapon weapon = rangedWeapons[i];
             check |= types[i] == previousAction;
             if (weapon == null || types[i] == previousAction) {
@@ -86,25 +92,36 @@ public class CombatManager {
                 break; // If the enemy's health is less than or equal to the weapon's damage, break
             }
         }
-        if (bestWeapon == null) {
-            return false; // No suitable weapon found
+        if (sumWeapons > 1){
+            if (bestWeapon == null) {
+                return false;
+            }
+            switch (bestWeapon.getType()) {
+                case GUN:
+                    hero.botShoot(path);
+                    return true;
+
+                case SPECIAL:
+                    hero.botUseSpecial(path);
+                    return true;
+
+                case THROWABLE:
+                    hero.botThrowItem(path);
+                    return true;
+            }
+            if (check) {
+                hero.botAttack(path);
+                return true;
+            }
         }
-        switch (bestWeapon.getType()) {
-            case GUN:
+        else {
+            if (previousAction == HeroActionType.ATTACK && BotContext.inventory.getGun() != null) {
                 hero.botShoot(path);
                 return true;
-
-            case SPECIAL:
-                hero.botUseSpecial(path);
-                return true;
-
-            case THROWABLE:
-                hero.botThrowItem(path);
-                return true;
-        }
-        if (check) {
+            }
             hero.botAttack(path);
             return true;
+
         }
         return false;
     }
@@ -117,6 +134,10 @@ public class CombatManager {
         String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(distance > 2, false), BotContext.player, enemy, false);
         if (path == null || path.isEmpty()) {
             return false; // No valid path to the enemy
+        }
+        if (BotMemory.recentActions.isEmpty()) {
+            System.out.println("LOGIC: recentActions is empty. Skipping melee attack this turn.");
+            return false; // Nếu danh sách hành động rỗng, không làm gì cả.
         }
         HeroActionType previousAction = BotMemory.recentActions.get(BotMemory.recentActions.size() - 1);
         if (distance == 1) {
