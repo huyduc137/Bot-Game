@@ -1,5 +1,6 @@
 package bot.logic;
 
+import bot.utils.GameUtils;
 import jsclub.codefest.sdk.model.support_items.SupportItem;
 import jsclub.codefest.sdk.model.npcs.Ally;
 import jsclub.codefest.sdk.base.Node;
@@ -133,12 +134,13 @@ public class CombatManager {
         int distance = PathUtils.distance(BotContext.player, enemy);
         String path = PathUtils.getShortestPath(BotContext.gameMap, PathPlanner.getNodesToAvoid(distance > 2, false), BotContext.player, enemy, false);
         if (path == null || path.isEmpty()) {
-            return false; // No valid path to the enemy
+            return false;
         }
         if (BotMemory.recentActions.isEmpty()) {
             System.out.println("LOGIC: recentActions is empty. Skipping melee attack this turn.");
             return false; // Nếu danh sách hành động rỗng, không làm gì cả.
         }
+        if (BotMemory.recentActions.isEmpty()) return false;
         HeroActionType previousAction = BotMemory.recentActions.get(BotMemory.recentActions.size() - 1);
         if (distance == 1) {
             if (previousAction == HeroActionType.ATTACK && BotContext.inventory.getGun() != null) {
@@ -149,6 +151,30 @@ public class CombatManager {
             hero.botAttack(path);
             return true; // Successfully attacked the enemy
         } else {
+            System.out.println("Logic: Botattack");
+            Weapon currentGun = BotContext.inventory.getGun();
+            Weapon currentThrowable = BotContext.inventory.getThrowable();
+            Weapon currentSpecial = BotContext.inventory.getSpecial();
+            if ((currentGun != null && GameUtils.isAligned(BotContext.player , enemy) && currentGun.getRange()[1] >= distance &&  currentThrowable == null && currentSpecial == null) ||
+                    (currentGun != null && GameUtils.isAligned(BotContext.player , enemy) && currentSpecial != null && currentThrowable != null &&
+                            (currentSpecial.getRange()[1] < distance || currentThrowable.getRange()[1] < distance)))
+            {
+                if (!currentGun.getId().equals("SHOTGUN")){
+                    System.out.println("ban doi do......");
+                    if (previousAction == HeroActionType.ATTACK && BotContext.inventory.getGun() != null) {
+                        hero.botShoot(path);
+                        return true;
+                    }
+                    hero.botAttack(path);
+                    return true;
+                }
+                else {
+                    System.out.println("di chuyen1......");
+                    hero.botMove(path);
+                    return true;
+                }
+            }
+            System.out.println("di chuyen2......");
             hero.botMove(path);
             return true;
             // Move towards the enemy if not adjacent

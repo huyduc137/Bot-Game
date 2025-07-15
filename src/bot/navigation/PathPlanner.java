@@ -6,6 +6,8 @@ import java.util.List;
 
 import jsclub.codefest.sdk.algorithm.PathUtils;
 import jsclub.codefest.sdk.base.Node;
+import jsclub.codefest.sdk.model.Element;
+import jsclub.codefest.sdk.model.ElementType;
 import jsclub.codefest.sdk.model.obstacles.Obstacle;
 import jsclub.codefest.sdk.model.obstacles.ObstacleTag;
 import jsclub.codefest.sdk.model.players.Player;
@@ -18,9 +20,13 @@ import bot.memory.BotMemory;
 public class PathPlanner {
     public static List<Node> getNodesToAvoid(boolean avoidPlayers, boolean avoidEnemies) {
         List<Node> restrictedNodes = new ArrayList<>();
+        List<Obstacle> allObstacles = BotContext.gameMap.getListObstacles();
+        for (Obstacle obstacle : allObstacles) {
+            if (obstacle.getType() == ElementType.TRAP) {
+                restrictedNodes.add(obstacle);
+                continue;
+            }
 
-        // Thêm các vật cản không thể đi qua
-        for (Obstacle obstacle : BotContext.gameMap.getListObstacles()) {
             List<ObstacleTag> tags = obstacle.getTags();
             if (tags == null || !tags.contains(ObstacleTag.CAN_GO_THROUGH)) {
                 restrictedNodes.add(obstacle);
@@ -29,9 +35,6 @@ public class PathPlanner {
 
         if (avoidPlayers) {
             for (Player otherPlayer : BotContext.gameMap.getOtherPlayerInfo()) {
-                // Chỉ thêm người chơi khác vào danh sách né
-                // nếu họ không ở cùng vị trí với bot của mình.
-                // Điều này tránh trường hợp bot tự chặn đường mình khi đứng trên xác đối thủ.
                 if (otherPlayer.getX() != BotContext.player.getX() || otherPlayer.getY() != BotContext.player.getY()) {
                     restrictedNodes.add(otherPlayer);
                 }
@@ -41,6 +44,7 @@ public class PathPlanner {
         if (avoidEnemies) {
             restrictedNodes.addAll(BotMemory.getAffectedNodes());
         }
+
         return restrictedNodes;
     }
 
@@ -119,5 +123,25 @@ public class PathPlanner {
         return BotMemory.getAffectedNodes().stream()
                 .min(Comparator.comparingInt(node -> PathUtils.distance(BotContext.player, node)))
                 .orElse(null);
+    }
+    public static boolean isCellSafeForZigzag(Node cell) {
+        int mapSize = BotContext.gameMap.getMapSize();
+        if (cell.getX() < 0 || cell.getX() >= mapSize || cell.getY() < 0 || cell.getY() >= mapSize) {
+            return false;
+        }
+
+        Element element = BotContext.gameMap.getElementByIndex(cell.getX(), cell.getY());
+
+        if (element instanceof Obstacle) {
+            Obstacle obstacle = (Obstacle) element;
+            if (obstacle.getType() == ElementType.TRAP) {
+                return false;
+            }
+            if (obstacle.getTags() != null && !obstacle.getTags().contains(ObstacleTag.CAN_GO_THROUGH)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

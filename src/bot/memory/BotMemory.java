@@ -6,6 +6,7 @@ import jsclub.codefest.sdk.model.GameMap;
 import jsclub.codefest.sdk.model.effects.Effect;
 import jsclub.codefest.sdk.model.players.Player;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -22,6 +23,9 @@ public class BotMemory {
     public static List<Node[]> trackedNpcSegments = new ArrayList<>();
     public static List<Node>[] recentAllys =  new List[2];
     public static List<Node>[] recentEnemies =   new List[2];
+    public static LinkedList<Character> lastThreeMoves = new LinkedList<>();
+    public static int straightMoveCounter = 0;
+    public static char lastMoveDirection = ' ';
 
     public static void update(GameMap gameMap) {
 

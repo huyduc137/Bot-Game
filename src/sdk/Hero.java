@@ -1,5 +1,8 @@
 package sdk;
 
+import bot.navigation.PathPlanner;
+import bot.utils.GameUtils;
+import jsclub.codefest.sdk.base.Node;
 import jsclub.codefest.sdk.factory.SupportItemFactory;
 
 import java.io.IOException;
@@ -21,8 +24,9 @@ public class Hero extends jsclub.codefest.sdk.Hero {
             return; // Avoid moving if direction is not specified
         }
         System.out.println("Action: Moving");
-        super.move(direction);
-        BotMemory.recentActions.add(HeroActionType.MOVE);
+//        super.move(direction);
+//        BotMemory.recentActions.add(HeroActionType.MOVE);
+        executeSmartMove(direction);
     }
 
     public void botAttack(String direction) throws IOException {
@@ -102,6 +106,107 @@ public class Hero extends jsclub.codefest.sdk.Hero {
         // 
         System.out.println("Action: Idle");
         BotMemory.recentActions.add(HeroActionType.IDLE);
+    }
+
+    private void executeSmartMove(String path) throws IOException {
+        char nextMoveDirection = path.charAt(0);
+
+        // Kiểm tra xem có cần đi díc dắc không
+        if (shouldZigzag(nextMoveDirection)) {
+            // --- LOGIC DÍC DẮC THÔNG MINH BẮT ĐẦU TỪ ĐÂY ---
+
+            // 1. Lấy vị trí hiện tại và tính toán vị trí đích cuối cùng
+            Node currentPos = BotContext.player;
+            Node destination = GameUtils.getDestinationNodeFromPath(currentPos, path);
+
+            // 2. Tính toán vector hướng tới đích
+            int dx = destination.getX() - currentPos.getX();
+            int dy = destination.getY() - currentPos.getY();
+
+            // 3. Xác định các hướng rẽ ưu tiên dựa trên vector đích
+            char preferredZigzag1 = ' ';
+            char preferredZigzag2 = ' ';
+
+            // Trường hợp đang đi thẳng theo chiều dọc (u/d) -> sẽ rẽ ngang (l/r)
+            if (nextMoveDirection == 'u' || nextMoveDirection == 'd') {
+                if (dx > 0) { // Đích ở bên phải -> ưu tiên rẽ phải
+                    preferredZigzag1 = 'r';
+                    preferredZigzag2 = 'l';
+                } else { // Đích ở bên trái hoặc thẳng hàng -> ưu tiên rẽ trái
+                    preferredZigzag1 = 'l';
+                    preferredZigzag2 = 'r';
+                }
+            }
+            // Trường hợp đang đi thẳng theo chiều ngang (l/r) -> sẽ rẽ dọc (u/d)
+            else if (nextMoveDirection == 'l' || nextMoveDirection == 'r') {
+                if (dy > 0) { // Đích ở bên trên -> ưu tiên rẽ lên
+                    preferredZigzag1 = 'u';
+                    preferredZigzag2 = 'd';
+                } else { // Đích ở bên dưới hoặc thẳng hàng -> ưu tiên rẽ xuống
+                    preferredZigzag1 = 'd';
+                    preferredZigzag2 = 'u';
+                }
+            }
+
+            // 4. Thử di chuyển theo hướng ưu tiên
+            // Thử hướng tốt nhất trước
+            if (tryZigzagMove(preferredZigzag1)) {
+                return; // Đã rẽ thành công, kết thúc lượt
+            }
+            // Nếu không được, thử hướng còn lại
+            if (tryZigzagMove(preferredZigzag2)) {
+                return; // Đã rẽ thành công, kết thúc lượt
+            }
+        }
+
+        // Nếu không đi díc dắc, di chuyển bình thường và cập nhật lịch sử
+        System.out.println("Action: Moving (Normal) " + nextMoveDirection);
+        super.move(String.valueOf(nextMoveDirection));
+        updateMoveHistory(nextMoveDirection);
+        BotMemory.recentActions.add(HeroActionType.MOVE);
+    }
+
+    private boolean shouldZigzag(char nextMove) {
+        if (BotMemory.lastThreeMoves.size() < 5) {
+            return false;
+        }
+        return BotMemory.lastThreeMoves.stream().allMatch(move -> move == nextMove);
+    }
+
+    private void updateMoveHistory(char move) {
+        BotMemory.lastThreeMoves.addFirst(move);
+        while (BotMemory.lastThreeMoves.size() > 5) {
+            BotMemory.lastThreeMoves.removeLast();
+        }
+    }
+
+    // ===== SỬA LẠI HÀM tryZigzagMove =====
+    private boolean tryZigzagMove(char direction) throws IOException {
+        if (direction == ' ') return false; // Không có hướng rẽ hợp lệ
+
+        Node currentPos = BotContext.player;
+        int targetX = currentPos.getX();
+        int targetY = currentPos.getY();
+
+        switch (direction) {
+            case 'u': targetY++; break;
+            case 'd': targetY--; break;
+            case 'l': targetX--; break;
+            case 'r': targetX++; break;
+        }
+
+        Node targetCell = new Node(targetX, targetY);
+
+        if (PathPlanner.isCellSafeForZigzag(targetCell)) {
+            System.out.println("Action: Moving (Zigzag) " + direction);
+            super.move(String.valueOf(direction)); // Gọi hàm gốc của SDK
+            BotMemory.recentActions.add(HeroActionType.MOVE);
+
+            BotMemory.lastThreeMoves.clear();
+
+            return true;
+        }
+        return false;
     }
 
 }
